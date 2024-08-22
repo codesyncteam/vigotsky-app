@@ -10,25 +10,63 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={{ 
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}>
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].placeholderText,
+        headerShown: true,
+        headerTintColor: Colors[colorScheme ?? 'light'].headerTintColor,
+        headerStyle: {
+          backgroundColor: Colors[colorScheme ?? 'light'].backgroundColor,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Avisos',
+          tabBarLabel: 'Inicio',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="check"
         options={{
-          title: 'Explore',
+          title: 'Registro de Horarios',
+          tabBarLabel: 'Registro',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'checkmark-done' : 'checkmark-done-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reporteSemanal"
+        options={{
+          title: 'Reporte Semanal',
+          tabBarLabel: 'Reporte',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'document-text' : 'document-text-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cafeteria"
+        options={{
+          title: 'Gestión de Cafetería',
+          tabBarLabel: 'Cafetería',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'cafe' : 'cafe-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="moreOptions"
+        options={{
+          title: 'Más Opciones',
+          tabBarLabel: 'Más',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline'} color={color} />
           ),
         }}
       />
