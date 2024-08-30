@@ -3,19 +3,73 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, KeyboardAvo
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Updates from 'expo-updates';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // Estado para gestionar el estado de carga
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (username === '' || password === '') {
       Alert.alert('Error', 'Por favor, ingresa el usuario y la contraseña.');
     } else {
-      console.log('Sesión iniciada');
-      navigation.navigate('index');
+      setLoading(true); // Deshabilitar el botón y cambiar el texto
+  
+      try {
+        const response = await fetch('https://qa.api.vigotsky.utzilon.com/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            username,
+            password,
+          }).toString(),
+        });
+  
+        console.log('Respuesta:', response);
+  
+        const data = await response.json();
+        console.log('Data:', data);
+  
+        if (response.ok) {
+          console.log('Sesión iniciada');
+          
+          // Extraer información del usuario
+          const userInfo = data.data.info;
+  
+          // Guardar el token y la información del usuario en AsyncStorage
+          try {
+            await AsyncStorage.setItem('isLoggedIn', 'true');
+            await AsyncStorage.setItem('token', data.data.token);
+  
+            // Guardar cada campo de userInfo por separado
+            await AsyncStorage.setItem('userId', userInfo.id.toString());
+            await AsyncStorage.setItem('username', userInfo.username);
+            await AsyncStorage.setItem('email', userInfo.email);
+            await AsyncStorage.setItem('firstName', userInfo.first_name);
+            await AsyncStorage.setItem('lastName', userInfo.last_name);
+            await AsyncStorage.setItem('type', userInfo.type);
+            await AsyncStorage.setItem('typeId', userInfo.type_id.toString());
+  
+            await Updates.reloadAsync();
+          } catch (e) {
+            console.error('Error al guardar la sesión', e);
+          }
+        } else {
+          // Mostrar el mensaje de error del API
+          Alert.alert('Error', data.message || 'Hubo un problema con la solicitud.');
+        }
+      } catch (error) {
+        console.error('Error al iniciar sesión', error);
+        Alert.alert('Error', 'Hubo un problema al intentar iniciar sesión.');
+      } finally {
+        setLoading(false); // Habilitar el botón y restablecer el texto
+      }
     }
   };
 
@@ -50,10 +104,17 @@ export default function Login() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        autoCapitalize="none"
       />
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <Text style={styles.loginButtonText}>Ingresar</Text>
+      <TouchableOpacity
+        style={[styles.loginButton, { opacity: loading ? 0.5 : 1 }]} // Reducir la opacidad cuando está cargando
+        onPress={handleLogin}
+        disabled={loading} // Deshabilitar el botón cuando está cargando
+      >
+        <Text style={styles.loginButtonText}>
+          {loading ? 'Entrando...' : 'Ingresar'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('otherScreens/forgotPassword')}>
@@ -81,7 +142,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-     marginBottom: 30,
+    marginBottom: 30,
   },
   title: {
     fontSize: 24,

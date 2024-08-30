@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Vigotsky App",
-    "slug": "vigotsky-app",
-    "version": "1.0.0",
+    "name": "Vigotski App",
+    "slug": "Vigotski-app",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -16,11 +16,12 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.code.lebers.vigotskyapp"
+      "package": "com.code.lebers.vigotskiapp"
     },
     "web": {
       "bundler": "metro",
@@ -45,7 +46,10 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/8c115aac-71c2-41c2-b4dd-3b95d52710fe"
-    }
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
   }
 }

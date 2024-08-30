@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Logout() {
   const colorScheme = useColorScheme();
@@ -20,11 +21,19 @@ export default function Logout() {
     );
   };
 
-  const performLogout = () => {
-    // Aquí podrías añadir la lógica para cerrar sesión, como eliminar tokens, etc.
-    // Luego redirigir al usuario a la pantalla de inicio de sesión o cualquier otra pantalla
-    console.log("Sesión cerrada");
-    navigation.navigate('otherScreens/login'); // Navega a la pantalla de inicio de sesión
+  const performLogout = async () => {
+    try {
+      // Eliminar la sesión de AsyncStorage
+      await AsyncStorage.removeItem('isLoggedIn');
+      
+      // Registra el cierre de sesión
+      console.log("Sesión cerrada");
+      
+      // Redirige a la pantalla de inicio de sesión
+      navigation.navigate('otherScreens/login'); // Navega a la pantalla de inicio de sesión
+    } catch (error) {
+      console.error("Error al cerrar sesión", error);
+    }
   };
 
   return (

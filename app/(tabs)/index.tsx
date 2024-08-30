@@ -1,9 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Button } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import * as SplashScreen from 'expo-splash-screen';
+import { API_URL } from '@/scr/config'; 
+
+SplashScreen.preventAutoHideAsync();
+
 
 export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const checkSession = async () => {
+       try {
+        const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
+        console.log('isLoggedIn', isLoggedIn);
+        if (isLoggedIn !== 'true') {
+          console.log('No hay sesión activa');
+          navigation.replace('otherScreens/login');
+        } else {
+          console.log('Sesión activa');
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error('Error al verificar la sesión', e);
+        navigation.replace('otherScreens/login');
+      }
+    };
+
+    checkSession();
+  }, [navigation]);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 

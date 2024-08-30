@@ -8,15 +8,18 @@
       "distribution": "internal",
       "channel": "development",
       "android": {
-			"buildType": "apk"
-		  }
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview"
     },
     "production": {
-      "channel": "production"
+      "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {

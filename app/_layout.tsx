@@ -53,6 +53,7 @@ export default function RootLayout() {
         <Stack.Screen name="otherScreens/forgotPassword" options={{ title: 'Recuperar Contraseña',headerBackTitle: 'Atrás' }} />
         <Stack.Screen name="otherScreens/register" options={{ title: 'Registrarse',headerBackTitle: 'Atrás' }} />
         <Stack.Screen name="otherScreens/helpCenter" options={{ title: 'Centro de Ayuda',headerBackTitle: 'Atrás' }} />
+        <Stack.Screen name="otherScreens/programarSalida" options={{ title: 'Programar Salida',headerBackTitle: 'Atrás' }} />
         
         <Stack.Screen name="+not-found" />
       </Stack>

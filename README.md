@@ -48,3 +48,26 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+eas build --platform android
+
+
+2. Actualizar Dependencias
+Asegúrate de que todas tus dependencias estén actualizadas a versiones compatibles entre sí. A menudo, los problemas de compatibilidad se resuelven actualizando a las últimas versiones:
+
+bash
+Copiar código
+npm outdated
+Esto te mostrará qué paquetes están desactualizados. Luego, puedes actualizar los paquetes:
+
+bash
+Copiar código
+npm update
+
+npx expo start -c
+
+
+rm -rf node_modules
+npm cache clean --force
+npm install
