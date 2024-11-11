@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Button, RefreshControl } from 'react-native';
 import { useColorScheme } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
-import { fetchEvents } from '@/api/api';  
-import { API_URL } from '@/config';  
+import { fetchEvents } from '../../src/api/api';  
+import { API_URL } from '../../src/config';  
 
 SplashScreen.preventAutoHideAsync();
 

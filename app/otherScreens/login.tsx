@@ -1,11 +1,11 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
-import { API_URL } from '@/config'; 
+import { API_URL } from '../../src/config'; 
  
 export default function Login() {
   const [username, setUsername] = useState('');

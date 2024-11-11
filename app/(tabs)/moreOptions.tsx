@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Link } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useColorScheme } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 
 export default function MoreOptions() {
   const colorScheme = useColorScheme();

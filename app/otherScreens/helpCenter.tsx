@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 import { useColorScheme } from 'react-native';
 
 export default function HelpCenter() {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 import { useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 

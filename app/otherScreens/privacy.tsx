@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import { Colors } from '../../src/constants/Colors';
 import { useColorScheme } from 'react-native';
 
 export default function Privacy() {

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';  // Importa useFocusEffect
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { fetchEvents } from '@/api/api';  // Asegúrate de tener la ruta correcta para importarlo
-import { API_URL } from '@/config';  
+import { fetchEvents } from '../../src/api/api';  // Asegúrate de tener la ruta correcta para importarlo
+import { API_URL } from '../../src/config';  
 
 export default function Check() {
   const [data, setData] = useState([]);
