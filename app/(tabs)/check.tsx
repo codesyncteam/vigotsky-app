@@ -1,28 +1,13 @@
-import React, { useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';  // Importa useFocusEffect
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-const data = [
-  { id: '16', type: 'Salida', time: '02:40 PM', date: '28 Ago 2024' },
-  { id: '15', type: 'Entrada', time: '07:55 AM', date: '28 Ago 2024' },
-  { id: '14', type: 'Salida', time: '02:30 PM', date: '27 Ago 2024' },
-  { id: '13', type: 'Entrada', time: '07:45 AM', date: '27 Ago 2024' },
-  { id: '12', type: 'Salida', time: '02:35 PM', date: '26 Ago 2024' },
-  { id: '11', type: 'Entrada', time: '07:50 AM', date: '26 Ago 2024' },
-  { id: '10', type: 'Salida', time: '02:15 PM', date: '25 Ago 2024' },
-  { id: '9', type: 'Entrada', time: '08:00 AM', date: '25 Ago 2024' },
-  { id: '8', type: 'Salida', time: '02:20 PM', date: '24 Ago 2024' },
-  { id: '7', type: 'Entrada', time: '07:55 AM', date: '24 Ago 2024' },
-  { id: '6', type: 'Salida', time: '02:25 PM', date: '23 Ago 2024' },
-  { id: '5', type: 'Entrada', time: '07:40 AM', date: '23 Ago 2024' },
-  { id: '4', type: 'Salida', time: '02:35 PM', date: '22 Ago 2024' },
-  { id: '3', type: 'Entrada', time: '07:50 AM', date: '22 Ago 2024' },
-  { id: '2', type: 'Salida', time: '02:30 PM', date: '21 Ago 2024' },
-  { id: '1', type: 'Entrada', time: '07:45 AM', date: '21 Ago 2024' }
-];
+import { fetchEvents } from '@/api/api';  // Asegúrate de tener la ruta correcta para importarlo
+import { API_URL } from '@/config';  
 
 export default function Check() {
+  const [data, setData] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);  // Estado para manejar el estado de refresco
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
@@ -34,11 +19,6 @@ export default function Check() {
               text: 'Programar Salida', 
               onPress: () => navigation.navigate('otherScreens/programarSalida')
             },
-            // Esta opción de 'Descargar Reporte' está comentada para ser activada más tarde
-            // { 
-            //   text: 'Descargar Reporte', 
-            //   onPress: () => alert('Descargar Reporte presionado!') 
-            // },
             { text: 'Cancelar', style: 'cancel' }
           ])}
           style={styles.headerButton}
@@ -49,13 +29,62 @@ export default function Check() {
     });
   }, [navigation]);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text style={styles.itemText}>
-        {item.type} - {item.time} - {item.date}
-      </Text>
-    </View>
+  // Función para obtener los datos de la API
+  const fetchData = async () => {
+    const url = `${API_URL}/v2/reportes_avanzados/consulta/123`;  // URL actualizada
+    const method = 'POST';  // O 'GET', si es necesario
+
+    try {
+      await fetchEvents(setData, url, method);
+
+      setData((prevData) => {
+        return prevData.map(item => ({
+          id: item.id.toString(), 
+          type: item.access_type === 'login' ? 'Entrada' : 'Salida',
+          time: new Date(item.access_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          date: new Date(item.access_time).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
+          originalDate: item.access_time,  // Mantener la fecha original para comparación
+        }));
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Hubo un problema al obtener los datos.');
+    }
+  };
+
+  // Uso de useFocusEffect para recargar los datos cada vez que la pantalla se enfoque
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])  // El array vacío asegura que solo se ejecute una vez cada vez que la pantalla se enfoque
   );
+
+  // Función para manejar el refresco
+  const onRefresh = async () => {
+    setIsRefreshing(true);  // Iniciar el estado de refresco
+    await fetchData();  // Llamar a la función para actualizar los datos
+    setIsRefreshing(false);  // Detener el estado de refresco
+  };
+
+  const renderItem = ({ item, index }) => {
+    // Verificar si el día cambia
+    const isDayChange = index > 0 && item.date !== data[index - 1]?.date;
+
+    return (
+      <View>
+        {isDayChange && (
+          <View style={styles.daySeparator}>
+            <Text style={styles.daySeparatorText}>{item.date}</Text>
+          </View>
+        )}
+        <View style={styles.item}>
+          <Text style={styles.itemText}>
+            {item.type} - {item.time}
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -64,6 +93,12 @@ export default function Check() {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}  // Indica si está en proceso de refresco
+            onRefresh={onRefresh}  // Acción de refresco
+          />
+        }
       />
     </View>
   );
@@ -71,8 +106,8 @@ export default function Check() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
+    flex: 1, 
+    backgroundColor: '#f8f8f8', 
     padding: 5,
   },
   listContainer: {
@@ -95,5 +130,18 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     marginRight: 10,
+  },
+  daySeparator: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+    marginTop: 20,
+  },
+  daySeparatorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#666',
   },
 });

@@ -1,22 +1,29 @@
-import React, { useState,useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Button, RefreshControl } from 'react-native';
 import { useColorScheme } from 'react-native';
-import { Colors } from '@/constants/Colors'
+import { Colors } from '@/constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
-import { API_URL } from '@/scr/config'; 
+import { fetchEvents } from '@/api/api';  
+import { API_URL } from '@/config';  
 
 SplashScreen.preventAutoHideAsync();
 
-
 export default function Home() {
   const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);  // Estado para manejar el refresco
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const iconColor = Colors[colorScheme ?? 'light'].tint;
+  const textColor = Colors[colorScheme ?? 'light'].text;
 
   useEffect(() => {
     const checkSession = async () => {
-       try {
+      try {
         const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
         console.log('isLoggedIn', isLoggedIn);
         if (isLoggedIn !== 'true') {
@@ -35,39 +42,21 @@ export default function Home() {
     checkSession();
   }, [navigation]);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  useEffect(() => {
+    // Llamar a fetchEvents al cargar la pantalla
+    const url = `${API_URL}/v2/reportes_avanzados/consulta/122`;
+    const method = 'POST';  // Método 'POST'
+    fetchEvents(setEvents, url, method, {});
+  }, []);
 
-  const colorScheme = useColorScheme();
-  const iconColor = Colors[colorScheme ?? 'light'].tint;
-  const textColor = Colors[colorScheme ?? 'light'].text;
-
-  const events = [
-    {
-      title: 'Taller de Matemáticas',
-      description: 'Invitamos a los estudiantes de secundaria al taller intensivo de matemáticas que se realizará el próximo sábado.',
-      department: 'Departamento de Matemáticas',
-      date: '12 Nov 2023',
-      image: 'https://buffer.com/library/content/images/size/w1200/2023/10/free-images.jpg',
-      details: 'Este taller está diseñado para ayudar a los estudiantes a mejorar sus habilidades en matemáticas antes de los exámenes finales. Se cubrirán temas como álgebra, geometría, y trigonometría. Los estudiantes deben traer calculadora, cuaderno y lápiz. El taller se llevará a cabo de 9:00 AM a 1:00 PM.',
-    },
-    {
-      title: 'Festival de Primavera',
-      description: 'El próximo viernes se celebrará el Festival de Primavera en las instalaciones de la escuela.',
-      department: 'Departamento de Actividades Extracurriculares',
-      date: '18 Nov 2023',
-      image: 'https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg',
-      details: 'El Festival de Primavera incluirá presentaciones artísticas, juegos, y venta de comida. Todos los fondos recaudados serán destinados a mejoras en la escuela. Las puertas se abrirán a las 4:00 PM y el evento finalizará a las 9:00 PM. Se invita a todos los estudiantes, padres y personal a participar.',
-    },
-    {
-      title: 'Charla sobre Salud Mental',
-      description: 'Se invita a los padres y estudiantes a una charla sobre la importancia de la salud mental en el ámbito escolar.',
-      department: 'Departamento de Psicología',
-      date: '20 Nov 2023',
-      image: 'https://img.freepik.com/foto-gratis/belleza-otonal-abstracta-patron-venas-hoja-multicolor-generado-ia_188544-9871.jpg?size=626&ext=jpg&ga=GA1.1.2008272138.1723680000&semt=ais_hybrid',
-      details: 'La charla será impartida por expertos en psicología educativa y abordará temas como el manejo del estrés, la ansiedad, y la importancia de mantener un equilibrio entre el estudio y la vida personal. El evento se llevará a cabo en el auditorio de la escuela a las 5:00 PM. Se recomienda la asistencia de padres y estudiantes.',
-    },
-  ];
+  // Función para manejar el refresco
+  const onRefresh = async () => {
+    setIsRefreshing(true);  // Iniciar el estado de refresco
+    const url = `${API_URL}/v2/reportes_avanzados/consulta/122`;
+    const method = 'POST';  // Método 'POST'
+    await fetchEvents(setEvents, url, method, {});  // Actualizar los eventos
+    setIsRefreshing(false);  // Detener el refresco
+  };
 
   const openModal = (event) => {
     setSelectedEvent(event);
@@ -80,22 +69,29 @@ export default function Home() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}  // Indica si está refrescando
+          onRefresh={onRefresh}  // Acción para refrescar
+        />
+      }
+    >
       {events.map((event, index) => (
-        <TouchableOpacity key={index} style={styles.card} onPress={() => openModal(event)}>
+        <TouchableOpacity key={event.id || index} style={styles.card} onPress={() => openModal(event)}>
           <Text style={styles.cardTitle}>{event.title}</Text>
-          <Text style={styles.cardContent}>{event.description}</Text>
-          <Image source={{ uri: event.image }} style={styles.cardImage} />
+          <Text style={styles.cardContent}>{event.short_description}</Text>
+          <Image source={{ uri: event.image_url || 'https://via.placeholder.com/150' }} style={styles.cardImage} />
           <View style={styles.cardFooter}>
-            <Text style={styles.cardDepartment}>{event.department}</Text>
-            <Text style={styles.cardDate}>{event.date}</Text>
+            <Text style={styles.cardDepartment}>{event.area_name}</Text>
           </View>
         </TouchableOpacity>
       ))}
 
       <Modal
         visible={modalVisible}
-        animationType="fade" // Cambia el tipo de animación a "fade"
+        animationType="fade"
         transparent={true}
         onRequestClose={closeModal}
       >
@@ -104,8 +100,8 @@ export default function Home() {
             {selectedEvent && (
               <>
                 <Text style={styles.modalTitle}>{selectedEvent.title}</Text>
-                <Text style={styles.modalDescription}>{selectedEvent.details}</Text>
-                <Image source={{ uri: selectedEvent.image }} style={styles.modalImage} />
+                <Text style={styles.modalDescription}>{selectedEvent.description}</Text>
+                <Image source={{ uri: selectedEvent.image_url || 'https://via.placeholder.com/200' }} style={styles.modalImage} />
                 <Button title="Cerrar" onPress={closeModal} />
               </>
             )}
@@ -160,16 +156,11 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'left',
   },
-  cardDate: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Fondo oscuro sólido
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   modalContent: {
     width: '90%',

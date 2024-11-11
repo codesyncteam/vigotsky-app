@@ -5,7 +5,8 @@ import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
-
+import { API_URL } from '@/config'; 
+ 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +21,9 @@ export default function Login() {
       setLoading(true); // Deshabilitar el botón y cambiar el texto
   
       try {
-        const response = await fetch('https://qa.api.vigotsky.utzilon.com/login', {
+        const url = `${API_URL}/login`;
+        console.log('URL:', url);
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -64,8 +67,9 @@ export default function Login() {
           // Mostrar el mensaje de error del API
           Alert.alert('Error', data.message || 'Hubo un problema con la solicitud.');
         }
-      } catch (error) {
-        console.error('Error al iniciar sesión', error);
+      } catch (error) { 
+        console.error(`Error al iniciar sesión. URL: ${url}`, error);
+
         Alert.alert('Error', 'Hubo un problema al intentar iniciar sesión.');
       } finally {
         setLoading(false); // Habilitar el botón y restablecer el texto
