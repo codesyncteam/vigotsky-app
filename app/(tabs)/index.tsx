@@ -2,60 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Button, RefreshControl } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { fetchEvents } from '@/api/api';  
-import { API_URL } from '@/config';  
+import { API_URL } from '@/config';
+import { fetchEvents } from '@/api/api';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Home() {
+  console.log('Home');
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);  // Estado para manejar el refresco
-  const navigation = useNavigation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const router = useRouter();
   const colorScheme = useColorScheme();
-  const iconColor = Colors[colorScheme ?? 'light'].tint;
-  const textColor = Colors[colorScheme ?? 'light'].text;
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const url = `${API_URL}/v2/reportes_avanzados/consulta/122`;
+      const method = 'POST';
+      console.log(`Fetching events from: ${url}`);
+      await fetchEvents(setEvents, url, method, {}, router);
+      console.log('Events fetched:', events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-        console.log('isLoggedIn', isLoggedIn);
-        if (isLoggedIn !== 'true') {
-          console.log('No hay sesión activa');
-          navigation.replace('otherScreens/login');
-        } else {
-          console.log('Sesión activa');
-          setLoading(false);
-        }
-      } catch (e) {
-        console.error('Error al verificar la sesión', e);
-        navigation.replace('otherScreens/login');
-      }
-    };
-
-    checkSession();
-  }, [navigation]);
-
-  useEffect(() => {
-    // Llamar a fetchEvents al cargar la pantalla
-    const url = `${API_URL}/v2/reportes_avanzados/consulta/122`;
-    const method = 'POST';  // Método 'POST'
-    fetchEvents(setEvents, url, method, {});
+    loadEvents();
   }, []);
 
-  // Función para manejar el refresco
   const onRefresh = async () => {
-    setIsRefreshing(true);  // Iniciar el estado de refresco
-    const url = `${API_URL}/v2/reportes_avanzados/consulta/122`;
-    const method = 'POST';  // Método 'POST'
-    await fetchEvents(setEvents, url, method, {});  // Actualizar los eventos
-    setIsRefreshing(false);  // Detener el refresco
+    setIsRefreshing(true);
+    await loadEvents();
+    setIsRefreshing(false);
   };
 
   const openModal = (event) => {
@@ -73,21 +59,27 @@ export default function Home() {
       style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}
       refreshControl={
         <RefreshControl
-          refreshing={isRefreshing}  // Indica si está refrescando
-          onRefresh={onRefresh}  // Acción para refrescar
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
         />
       }
     >
-      {events.map((event, index) => (
-        <TouchableOpacity key={event.id || index} style={styles.card} onPress={() => openModal(event)}>
-          <Text style={styles.cardTitle}>{event.title}</Text>
-          <Text style={styles.cardContent}>{event.short_description}</Text>
-          <Image source={{ uri: event.image_url || 'https://via.placeholder.com/150' }} style={styles.cardImage} />
-          <View style={styles.cardFooter}>
-            <Text style={styles.cardDepartment}>{event.area_name}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+      {loading ? (
+        <Text style={styles.loadingText}>Cargando eventos...</Text>
+      ) : events.length > 0 ? (
+        events.map((event, index) => (
+          <TouchableOpacity key={event.id || index} style={styles.card} onPress={() => openModal(event)}>
+            <Text style={styles.cardTitle}>{event.title}</Text>
+            <Text style={styles.cardContent}>{event.short_description}</Text>
+            <Image source={{ uri: event.image_url || 'https://via.placeholder.com/150' }} style={styles.cardImage} />
+            <View style={styles.cardFooter}>
+              <Text style={styles.cardDepartment}>{event.area_name || 'Sin área'}</Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <Text style={styles.noEventsText}>No hay registros disponibles.</Text>
+      )}
 
       <Modal
         visible={modalVisible}
@@ -155,6 +147,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textAlign: 'left',
+  },
+  noEventsText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
+  },
+  loadingText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
   },
   modalContainer: {
     flex: 1,

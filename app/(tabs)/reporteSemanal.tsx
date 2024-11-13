@@ -1,212 +1,119 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  Button,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, RefreshControl, ScrollView } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useColorScheme } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { fetchEvents } from '@/api/api';
+import { API_URL } from '@/config';
 
-const data = [
-  {
-    id: '1',
-    week: '21 Ago 2024 al 27 Ago 2024',
-    details: [
-      {
-        subject: 'Español',
-        academic: 'Sin pendientes',
-        conduct: '',
-        teacher: '',
-      },
-      {
-        subject: 'Inglés',
-        academic:
-          'Tienes pendientes por realizar en tu kn book, las actividades están marcadas en la parte posterior de cada página.',
-        conduct: 'Solo evita platicar en clase.',
-        teacher: 'Miss Adriana',
-      },
-      { subject: 'Tecnología', academic: '', conduct: '', teacher: '' },
-      { subject: 'Música', academic: '', conduct: '', teacher: '' },
-      {
-        subject: 'Educación Física',
-        academic: '',
-        conduct: '',
-        teacher: 'Prof. Carlos',
-      },
-      {
-        subject: 'Francés',
-        academic: 'Sin pendientes',
-        conduct: 'Buena conducta.',
-        teacher: 'Profe Roberto',
-      },
-    ],
-  },
-  // Otras semanas
-];
+interface Report {
+  id: string;
+  week: string;
+}
 
-export default function ReporteSemanal() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedWeek, setSelectedWeek] = useState(null);
+export default function Reportes() {
+  const colorScheme = useColorScheme();
+  const iconColor = Colors[colorScheme].tint;
+  const [data, setData] = useState<Report[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigation = useNavigation();
+  const { width } = Dimensions.get('window');
+  //const iconColor = Colors['light'].tint;
 
-  const openModal = (item) => {
-    setSelectedWeek(item);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedWeek(null);
-  };
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.item} onPress={() => openModal(item)}>
-      <Text style={styles.itemText}>Semana - {item.week}</Text>
-    </TouchableOpacity>
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])
   );
 
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+  const fetchData = async () => {
+    const url = `${API_URL}/v2/reportes_avanzados/consulta/124`;
+    const method = 'POST';
 
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {selectedWeek && (
-              <>
-                <Text style={styles.modalTitle}>{selectedWeek.week}</Text>
-                <ScrollView horizontal>
-                  <View style={styles.tableContainer}>
-                    <View style={styles.tableRow}>
-                      <Text style={[styles.tableHeader, { flex: 1 }]}>
-                        Asignatura
-                      </Text>
-                      <Text style={[styles.tableHeader, { flex: 2 }]}>
-                        Situación académica
-                      </Text>
-                      <Text style={[styles.tableHeader, { flex: 2 }]}>
-                        Situación conductual
-                      </Text>
-                      <Text style={[styles.tableHeader, { flex: 1 }]}>
-                        Maestro
-                      </Text>
-                    </View>
-                    {selectedWeek.details.map((detail, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.tableRow,
-                          index % 2 === 0 ? styles.evenRow : styles.oddRow, // Estilo condicional para alternar colores
-                        ]}
-                      >
-                        <Text style={[styles.tableCell, { flex: 1 }]}>
-                          {detail.subject}
-                        </Text>
-                        <Text style={[styles.tableCell, { flex: 2 }]}>
-                          {detail.academic}
-                        </Text>
-                        <Text style={[styles.tableCell, { flex: 2 }]}>
-                          {detail.conduct}
-                        </Text>
-                        <Text style={[styles.tableCell, { flex: 1 }]}>
-                          {detail.teacher}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </ScrollView>
-                <Button title="Cerrar" onPress={closeModal} />
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-    </View>
+    try {
+      await fetchEvents(setData, url, method);
+      setData((prevData) =>
+        prevData.map((item) => ({
+          id: item.id.toString(),
+          week: item.description,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Hubo un problema al obtener los datos.');
+    }
+  };
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData();
+    setIsRefreshing(false);
+  };
+
+  const handlePress = (report: Report) => {
+    navigation.navigate('otherScreens/DetalleReporte', { id: report.id });
+  };
+
+  return (
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+    >
+      <View style={styles.row}>
+        {data.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.card, { width: width / 2 - 30 }]}
+            onPress={() => handlePress(item)}
+          >
+            <Icon name="file-document" size={40} color={iconColor} style={styles.icon} />
+            <Text style={styles.cardTitle}>{item.week}</Text>
+            <Text style={styles.cardContent}>Revisa el detalle del reporte semanal.</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
     padding: 20,
+    backgroundColor: '#f8f8f8',
   },
-  listContainer: {
-    paddingBottom: 20,
+  row: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  item: {
+  card: {
     backgroundColor: '#ffffff',
-    padding: 15,
-    marginVertical: 8,
     borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    height: 180,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 10,
     elevation: 5,
-  },
-  itemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
   },
-  modalContent: {
-    width: '90%',
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
+  icon: {
+    marginBottom: 10,
+  }, 
+  cardTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: 10,
+    color: '#333',
     textAlign: 'center',
   },
-  tableContainer: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    overflow: 'hidden',
-    width: 900, // Ancho de la tabla para permitir scroll horizontal
-  },
-  tableRow: {
-    flexDirection: 'row',
-  },
-  tableHeader: {
-    fontWeight: 'bold',
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    textAlign: 'start',
-  },
-  tableCell: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    textAlign: 'justify',
-  },
-  evenRow: {
-    backgroundColor: '#f9f9f9', // Color para las filas pares
-  },
-  oddRow: {
-    backgroundColor: '#ffffff', // Color para las filas impares
+  cardContent: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });

@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';  // Importa useFocusEffect
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { fetchEvents } from '@/api/api';  // Asegúrate de tener la ruta correcta para importarlo
-import { API_URL } from '@/config';  
+import { fetchEvents } from '@/api/api';
+import { API_URL } from '@/config';
+import { useRouter } from 'expo-router';
 
 export default function Check() {
   const [data, setData] = useState([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);  // Estado para manejar el estado de refresco
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigation = useNavigation();
+  const router = useRouter();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -31,21 +33,21 @@ export default function Check() {
 
   // Función para obtener los datos de la API
   const fetchData = async () => {
-    const url = `${API_URL}/v2/reportes_avanzados/consulta/123`;  // URL actualizada
-    const method = 'POST';  // O 'GET', si es necesario
+    const url = `${API_URL}/v2/reportes_avanzados/consulta/123`;
+    const method = 'POST';
 
     try {
-      await fetchEvents(setData, url, method);
+      await fetchEvents(setData, url, method, {}, router);
 
-      setData((prevData) => {
-        return prevData.map(item => ({
-          id: item.id.toString(), 
+      setData((prevData) =>
+        prevData.map(item => ({
+          id: item.id.toString(),
           type: item.access_type === 'login' ? 'Entrada' : 'Salida',
           time: new Date(item.access_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           date: new Date(item.access_time).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }),
-          originalDate: item.access_time,  // Mantener la fecha original para comparación
-        }));
-      });
+          originalDate: item.access_time,
+        }))
+      );
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Hubo un problema al obtener los datos.');
@@ -56,18 +58,17 @@ export default function Check() {
   useFocusEffect(
     React.useCallback(() => {
       fetchData();
-    }, [])  // El array vacío asegura que solo se ejecute una vez cada vez que la pantalla se enfoque
+    }, [])
   );
 
   // Función para manejar el refresco
   const onRefresh = async () => {
-    setIsRefreshing(true);  // Iniciar el estado de refresco
-    await fetchData();  // Llamar a la función para actualizar los datos
-    setIsRefreshing(false);  // Detener el estado de refresco
+    setIsRefreshing(true);
+    await fetchData();
+    setIsRefreshing(false);
   };
 
   const renderItem = ({ item, index }) => {
-    // Verificar si el día cambia
     const isDayChange = index > 0 && item.date !== data[index - 1]?.date;
 
     return (
@@ -95,8 +96,8 @@ export default function Check() {
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}  // Indica si está en proceso de refresco
-            onRefresh={onRefresh}  // Acción de refresco
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
           />
         }
       />

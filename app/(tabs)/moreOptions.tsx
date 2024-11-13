@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 
 export default function MoreOptions() {
+  console.log('Home');
   const colorScheme = useColorScheme();
   const iconColor = Colors[colorScheme].tint;
   const { width } = Dimensions.get('window');

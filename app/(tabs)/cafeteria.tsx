@@ -16,6 +16,7 @@ export default function HomeScreen() {
         <Link href="/otherScreens/menu" style={styles.cardLink}>
           <View style={[styles.card, { width: width / 2 - 30 }]}>
             <Icon name="restaurant-outline" size={40} color={iconColor} style={styles.icon} />
+            
             <Text style={styles.cardTitle}>Ver Menú</Text>
             <Text style={styles.cardContent}>Consulta el menú semanal de la cafetería.</Text>
           </View>

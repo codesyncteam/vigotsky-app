@@ -1,6 +1,6 @@
 
 const primaryColorLight = '#E7013D';
-const primaryColorDark = '#E7013D';
+const primaryColorDark = '#c5c8c4';
 const secondaryColorLight = '#29348E';
 const secondaryColorDark = '#29348E';
 

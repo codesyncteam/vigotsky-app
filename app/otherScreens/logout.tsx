@@ -4,10 +4,12 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';  // Usando useRouter
 
 export default function Logout() {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
+  const router = useRouter();
 
   const handleLogout = () => {
     Alert.alert(
@@ -30,7 +32,8 @@ export default function Logout() {
       console.log("Sesión cerrada");
       
       // Redirige a la pantalla de inicio de sesión
-      navigation.navigate('otherScreens/login'); // Navega a la pantalla de inicio de sesión
+      //navigation.navigate('otherScreens/login'); // Navega a la pantalla de inicio de sesión
+      router.push('/otherScreens/login'); 
     } catch (error) {
       console.error("Error al cerrar sesión", error);
     }
